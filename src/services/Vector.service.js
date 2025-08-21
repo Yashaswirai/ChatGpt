@@ -20,11 +20,14 @@ const createMemory = async({vector,messageId,metadata}) => {
 
 const queryMemory = async({vector,metadata,limit=2}) => {
     try {
+        if (!metadata?.user) {
+            throw new Error("metadata.user is required to query by user");
+        }
         const data = await GptIndex.query({
             vector,
             topK: limit,
             includeMetadata: true,
-            filter: metadata ? metadata : undefined,
+            filter: { user: metadata.user },
         });
         return data.matches;
     } catch (error) {
