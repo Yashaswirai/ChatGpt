@@ -1,9 +1,8 @@
 const { Server } = require("socket.io");
-const jwt = require("jsonwebtoken");
-const cookie = require("cookie");
 const { socketMiddleware } = require("../middlewares/auth.middleware");
-const { generateResponse } = require("../services/Ai.service");
+const { generateResponse, generateVector } = require("../services/Ai.service");
 const messageModel = require("../models/message.model");
+const { createMemory, queryMemory } = require("../services/Vector.service");
 
 const connectSocketServer = (httpServer) => {
   const io = new Server(httpServer, {});
@@ -13,27 +12,86 @@ const connectSocketServer = (httpServer) => {
   io.on("connection", (socket) => {
     socket.on("ai-message", async (data) => {
       const { chatId, content } = data;
-      await messageModel.create({
-        chatId,
-        content,
-        role: "user",
-        sender: socket.user._id,
+
+     const [message, vector] = await Promise.all([
+       messageModel.create({
+         chatId,
+         content,
+         role: "user",
+         sender: socket.user._id,
+       }),
+       generateVector(content)
+     ]);
+      await createMemory({
+        vector,
+        messageId: message._id,
+        metadata: {
+          user: socket.user._id,
+          chatId,
+          content,
+          role: "user",
+        },
       });
-      const chatHistory = await messageModel.find({ chatId });
-      console.log("Chat history:", chatHistory);
-      const response = await generateResponse(
-        chatHistory.map((msg) => ({
-          role: msg.role,
-          parts: [{ text: msg.content }],
-        }))
-      );
-      await messageModel.create({
-        chatId,
-        content: response,
-        role: "model",
-        sender: socket.user._id,
-      });
+
+      const [memory, chatHistory] = await Promise.all([
+        queryMemory({
+          vector,
+          metadata: {
+            user: socket.user._id,
+            chatId,
+            content,
+            role: "user",
+          },
+        }),
+        messageModel
+          .find({ chatId })
+          .sort({ createdAt: -1 })
+          .limit(7)
+          .lean()
+      ]);
+      chatHistory.reverse();
+      // Long Term Memory
+      const LTM = [
+        {
+          role: "model",
+          parts: [
+            {
+              text: `You are a helpful AI assistant. You have access to the following information from previous conversations: ${memory
+                .map((m) => m.metadata.content)
+                .join(" \n")}`,
+            },
+          ],
+        }
+      ]
+      // Short Term Memory
+      const STM = chatHistory.map((msg) => ({
+        role: msg.role,
+        parts: [{ text: msg.content }],
+      }));
+
+      const prompt = [...LTM, ...STM];
+      const response = await generateResponse(prompt);      
       socket.emit("ai-response", { chatId, response });
+      // Save the response message in mongodb and in vector data base
+      const [resMessage,resVector] = await Promise.all([
+        messageModel.create({
+          chatId,
+          content: response,
+          role: "model",
+          sender: socket.user._id,
+        }),
+        generateVector(response)
+      ]);
+      await createMemory({
+        vector: resVector,
+        messageId: resMessage._id,
+        metadata: {
+          user: socket.user._id,
+          chatId,
+          content: response,
+          role: "model",
+        },
+      });
     });
   });
 
