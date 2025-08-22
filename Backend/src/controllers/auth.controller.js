@@ -44,7 +44,26 @@ const loginUser = async (req, res) => {
   }
 };
 
+const authUser = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await userModel.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({ isAuthenticated: true, user });
+  } catch (error) {
+    console.error('Error authenticating user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   registerUser,
-  loginUser
+  loginUser,
+  authUser
 };
