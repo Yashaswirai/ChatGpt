@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Opt-in to both color schemes so native UI matches and form controls look right */
+:root {
+	color-scheme: light dark;
+}
