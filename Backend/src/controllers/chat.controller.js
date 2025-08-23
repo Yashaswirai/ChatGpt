@@ -1,4 +1,5 @@
 const chatModel = require("../models/chat.model");
+const messageModel = require("../models/message.model");
 
 const createChat = async (req, res) => {
     try {
@@ -71,10 +72,31 @@ const deleteChat = async (req, res) => {
     }
 };
 
+async function getChatMessages(req, res) {
+    try {
+        const { id } = req.params; // chatId
+        const userId = req.user._id;
+
+        // Ensure the chat belongs to the requesting user
+        const chat = await chatModel.findOne({ _id: id, userId }).lean();
+        if (!chat) {
+            return res.status(404).json({ message: "Chat not found" });
+        }
+
+        let query = messageModel.find({ chatId: id }).sort({ createdAt: 1 });
+        const messages = await query.lean();
+
+        return res.status(200).json({ messages });
+    } catch (error) {
+        return res.status(500).json({ message: "Error fetching messages" });
+    }
+}
+
 module.exports = {
     createChat,
     getChats,
     getChatById,
     updateChat,
-    deleteChat
+    deleteChat,
+    getChatMessages,
 };

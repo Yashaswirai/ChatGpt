@@ -31,6 +31,16 @@ const Home = () => {
         if (list.length > 0) {
           setChatId(list[0]._id);
           setTitle(list[0].title);
+          // preload the latest message for the first chat
+          try {
+            const res = await api.get(`/chat/${list[0]._id}/messages`);
+            const msgs = res?.data?.messages || [];
+            if (msgs.length > 0) {
+              setMessages(msgs.map(m => ({ role: m.role, content: m.content })));
+            }
+          } catch (e) {
+            console.error(e);
+          }
         }
       } catch (err) {
         toast.error(err?.response?.data?.message || "Failed to load chats");
@@ -43,14 +53,16 @@ const Home = () => {
 
   // listen for server responses
   useEffect(() => {
-    const onAiResponse = ({ response }) => {
+    const onAiResponse = ({ chatId: respChatId, response }) => {
+      // ignore responses for other chats
+      if (respChatId !== chatId) return;
       // append assistant message
       setMessages((prev) => [...prev, { role: "model", content: response }]);
       setPending(false);
     };
     socket.on("ai-response", onAiResponse);
     return () => socket.off("ai-response", onAiResponse);
-  }, [socket]);
+  }, [socket, chatId]);
 
   const handleSend = (content) => {
     // optimistic user message
@@ -73,10 +85,21 @@ const Home = () => {
     }
   };
 
-  const handleSelectChat = (c) => {
+  const handleSelectChat = async (c) => {
     setChatId(c._id);
     setTitle(c.title);
-    setMessages([]); // No fetch history implemented in this task
+    setMessages([]);
+    try {
+      // Fetch full message history for this chat
+      const { data } = await api.get(`/chat/${c._id}/messages`);
+      const list = data?.messages || [];
+      if (list.length > 0) {
+        setMessages(list.map(m => ({ role: m.role, content: m.content })));
+      }
+    } catch (err) {
+      // optional toast; keep UI quiet if none
+      console.error(err);
+    }
   };
 
   return (
