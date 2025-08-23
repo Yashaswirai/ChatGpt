@@ -6,6 +6,7 @@ const Sidebar = ({
   activeId,
   onSelect,
   onRename,
+  onDelete,
   mobileOpen = false,
   onCloseMobile,
 }) => {
@@ -88,18 +89,37 @@ const Sidebar = ({
           }
 
           return (
-            <button
+            <div
               key={c._id}
               onClick={() => onSelect?.(c)}
               onDoubleClick={(e) => {
                 e.preventDefault();
                 startEdit(c);
               }}
-              className={baseClass}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSelect?.(c);
+              }}
+              className={`${baseClass} group flex items-center justify-between gap-2`}
               title="Double-click to rename"
             >
-              {c.title}
-            </button>
+              <span className="truncate pr-2">{c.title}</span>
+              <button
+                type="button"
+                aria-label="Delete chat"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.(c._id);
+                }}
+                className="shrink-0 inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Delete chat"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0h10m-9 4v8m4-8v8m4-8v8M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" />
+                </svg>
+              </button>
+            </div>
           );
         })}
       </nav>

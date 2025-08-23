@@ -124,6 +124,37 @@ const Home = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/chat/${id}`);
+      setChats((prev) => prev.filter((c) => c._id !== id));
+      // if deleting active chat, switch to next available
+      if (chatId === id) {
+        const remaining = chats.filter((c) => c._id !== id);
+        const next = remaining[0];
+        if (next) {
+          setChatId(next._id);
+          setTitle(next.title);
+          setMessages([]);
+          try {
+            const { data } = await api.get(`/chat/${next._id}/messages`);
+            const list = data?.messages || [];
+            if (list.length > 0) setMessages(list.map((m) => ({ role: m.role, content: m.content })));
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          setChatId(null);
+          setTitle("New Chat");
+          setMessages([]);
+        }
+      }
+      setMobileSidebarOpen(false);
+    } catch (err) {
+      toast.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to delete chat");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex items-center justify-center p-0 transition-colors">
       <div className="w-full max-w-6xl h-screen md:h-[90vh] md:my-4 rounded-none md:rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/40 backdrop-blur border border-slate-200 dark:border-white/10 shadow-xl dark:shadow-black/30 flex">
@@ -133,6 +164,7 @@ const Home = () => {
           activeId={chatId}
           onSelect={handleSelectChat}
           onRename={handleRename}
+          onDelete={handleDelete}
           mobileOpen={mobileSidebarOpen}
           onCloseMobile={() => setMobileSidebarOpen(false)}
         />
