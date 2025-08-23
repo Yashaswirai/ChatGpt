@@ -18,17 +18,21 @@ const connectSocketServer = (httpServer) => {
     socket.on("ai-message", async (data) => {
       const { chatId, content } = data;
 
-  const [message, vector] = await Promise.all([
-       messageModel.create({
-         chatId,
-         content,
-         role: "user",
-         sender: socket.user._id,
-       }),
-       generateVector(content)
-     ]);
-  // bump chat updated time
-  try { require("../models/chat.model").findByIdAndUpdate(chatId, { $set: { updatedAt: new Date() } }).exec(); } catch {}
+      const [message, vector] = await Promise.all([
+        messageModel.create({
+          chatId,
+          content,
+          role: "user",
+          sender: socket.user._id,
+        }),
+        generateVector(content),
+      ]);
+      // bump chat updated time
+      try {
+        require("../models/chat.model")
+          .findByIdAndUpdate(chatId, { $set: { updatedAt: new Date() } })
+          .exec();
+      } catch {}
       await createMemory({
         vector,
         messageId: message._id,
@@ -50,11 +54,7 @@ const connectSocketServer = (httpServer) => {
             role: "user",
           },
         }),
-        messageModel
-          .find({ chatId })
-          .sort({ createdAt: -1 })
-          .limit(7)
-          .lean()
+        messageModel.find({ chatId }).sort({ createdAt: -1 }).limit(7).lean(),
       ]);
       chatHistory.reverse();
       // Long Term Memory
@@ -68,8 +68,8 @@ const connectSocketServer = (httpServer) => {
                 .join(" \n")}`,
             },
           ],
-        }
-      ]
+        },
+      ];
       // Short Term Memory
       const STM = chatHistory.map((msg) => ({
         role: msg.role,
@@ -77,19 +77,23 @@ const connectSocketServer = (httpServer) => {
       }));
 
       const prompt = [...LTM, ...STM];
-      const response = await generateResponse(prompt);      
+      const response = await generateResponse(prompt);
       socket.emit("ai-response", { chatId, response });
       // Save the response message in mongodb and in vector data base
-  const [resMessage,resVector] = await Promise.all([
+      const [resMessage, resVector] = await Promise.all([
         messageModel.create({
           chatId,
           content: response,
           role: "model",
           sender: socket.user._id,
         }),
-        generateVector(response)
+        generateVector(response),
       ]);
-  try { require("../models/chat.model").findByIdAndUpdate(chatId, { $set: { updatedAt: new Date() } }).exec(); } catch {}
+      try {
+        require("../models/chat.model")
+          .findByIdAndUpdate(chatId, { $set: { updatedAt: new Date() } })
+          .exec();
+      } catch {}
       await createMemory({
         vector: resVector,
         messageId: resMessage._id,

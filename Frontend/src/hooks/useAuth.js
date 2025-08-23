@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import api from "../API"
-import { toast } from "react-toastify"
 
 const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -12,7 +11,7 @@ const useAuth = () => {
         const response = await api.get('/auth/status')
         setIsAuthenticated(response.data.isAuthenticated)
       } catch (error) {
-        toast.error(error.response.data.message || 'Error checking auth status')
+        console.error(error)
       } finally {
         setLoading(false)
       }

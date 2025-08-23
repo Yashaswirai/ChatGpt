@@ -24,7 +24,57 @@ const getChats = async (req, res) => {
     }
 };
 
+const getChatById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+        const chat = await chatModel.findOne({ _id: id, userId });
+        if (!chat) {
+            return res.status(404).json({ error: "Chat not found" });
+        }
+        res.status(200).json({ chat });
+    } catch (error) {
+        res.status(500).json({ error: "Error fetching chat" });
+    }
+};
+
+const updateChat = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+        const { title } = req.body;
+        const chat = await chatModel.findOneAndUpdate(
+            { _id: id, userId },
+            { title },
+            { new: true }
+        );
+        if (!chat) {
+            return res.status(404).json({ error: "Chat not found" });
+        }
+        res.status(200).json({ message: "Chat updated", chat });
+    } catch (error) {
+        res.status(500).json({ error: "Error updating chat" });
+    }
+};
+
+const deleteChat = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+        const chat = await chatModel.findOneAndDelete({ _id: id, userId });
+        if (!chat) {
+            return res.status(404).json({ error: "Chat not found" });
+        }
+        res.status(200).json({ message: "Chat deleted" });
+    } catch (error) {
+        res.status(500).json({ error: "Error deleting chat" });
+    }
+};
+
 module.exports = {
     createChat,
-    getChats
+    getChats,
+    getChatById,
+    updateChat,
+    deleteChat
 };
