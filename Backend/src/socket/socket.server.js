@@ -5,7 +5,12 @@ const messageModel = require("../models/message.model");
 const { createMemory, queryMemory } = require("../services/Vector.service");
 
 const connectSocketServer = (httpServer) => {
-  const io = new Server(httpServer, {});
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "http://localhost:5173",
+      credentials: true,
+    },
+  });
   // Use the socket middleware for authentication
   io.use(socketMiddleware);
 
@@ -13,7 +18,7 @@ const connectSocketServer = (httpServer) => {
     socket.on("ai-message", async (data) => {
       const { chatId, content } = data;
 
-     const [message, vector] = await Promise.all([
+  const [message, vector] = await Promise.all([
        messageModel.create({
          chatId,
          content,
@@ -22,6 +27,8 @@ const connectSocketServer = (httpServer) => {
        }),
        generateVector(content)
      ]);
+  // bump chat updated time
+  try { require("../models/chat.model").findByIdAndUpdate(chatId, { $set: { updatedAt: new Date() } }).exec(); } catch {}
       await createMemory({
         vector,
         messageId: message._id,
@@ -73,7 +80,7 @@ const connectSocketServer = (httpServer) => {
       const response = await generateResponse(prompt);      
       socket.emit("ai-response", { chatId, response });
       // Save the response message in mongodb and in vector data base
-      const [resMessage,resVector] = await Promise.all([
+  const [resMessage,resVector] = await Promise.all([
         messageModel.create({
           chatId,
           content: response,
@@ -82,6 +89,7 @@ const connectSocketServer = (httpServer) => {
         }),
         generateVector(response)
       ]);
+  try { require("../models/chat.model").findByIdAndUpdate(chatId, { $set: { updatedAt: new Date() } }).exec(); } catch {}
       await createMemory({
         vector: resVector,
         messageId: resMessage._id,
