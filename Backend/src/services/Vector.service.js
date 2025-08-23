@@ -34,7 +34,19 @@ const queryMemory = async({vector,metadata,limit=2}) => {
         console.log("Error querying the memory: ", error);
     }
 };
+
+const deleteMemory = async (ids = []) => {
+    try {
+        if (!ids.length) {
+            throw new Error("At least one ID must be provided for deletion");
+        }
+        await GptIndex.deleteMany(ids);
+    } catch (error) {
+        console.log("Error deleting the memory: ", error);
+    }
+};
 module.exports = {
     createMemory,
-    queryMemory
+    queryMemory,
+    deleteMemory
 };

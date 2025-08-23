@@ -18,6 +18,7 @@ const Home = () => {
   const [chats, setChats] = useState([]);
   const [messages, setMessages] = useState([]);
   const [pending, setPending] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Load recent chats on mount
   useEffect(() => {
@@ -95,6 +96,7 @@ const Home = () => {
     setTitle(c.title);
     setMessages([]);
   setPending(false);
+  setMobileSidebarOpen(false);
     try {
       // Fetch full message history for this chat
       const { data } = await api.get(`/chat/${c._id}/messages`);
@@ -131,9 +133,15 @@ const Home = () => {
           activeId={chatId}
           onSelect={handleSelectChat}
           onRename={handleRename}
+          mobileOpen={mobileSidebarOpen}
+          onCloseMobile={() => setMobileSidebarOpen(false)}
         />
         <div className="flex-1 flex flex-col">
-          <ChatHeader title={title} />
+          <ChatHeader
+            title={title}
+            onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
+            sidebarOpen={mobileSidebarOpen}
+          />
           <MessageList messages={messages} pending={pending} />
           <MessageInput
             onSend={handleSend}

@@ -1,6 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 
-const Sidebar = ({ onNewChat, chats = [], activeId, onSelect, onRename }) => {
+const Sidebar = ({
+  onNewChat,
+  chats = [],
+  activeId,
+  onSelect,
+  onRename,
+  mobileOpen = false,
+  onCloseMobile,
+}) => {
   const [editingId, setEditingId] = useState(null);
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
@@ -37,8 +45,8 @@ const Sidebar = ({ onNewChat, chats = [], activeId, onSelect, onRename }) => {
     }
   };
 
-  return (
-    <aside className="hidden md:flex md:flex-col w-64 h-full border-r border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900/40">
+  const Content = () => (
+    <>
       <div className="p-3">
         <button
           onClick={onNewChat}
@@ -95,7 +103,39 @@ const Sidebar = ({ onNewChat, chats = [], activeId, onSelect, onRename }) => {
           );
         })}
       </nav>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex md:flex-col w-64 h-full border-r border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900/40">
+        <Content />
+      </aside>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-40" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/40" onClick={onCloseMobile} />
+          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] h-full border-r border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-xl flex flex-col">
+            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-white/10">
+              <div className="font-semibold text-slate-700 dark:text-slate-200">Chats</div>
+              <button
+                type="button"
+                aria-label="Close sidebar"
+                onClick={onCloseMobile}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <Content />
+          </aside>
+        </div>
+      )}
+    </>
   );
 };
 

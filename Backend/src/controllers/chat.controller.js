@@ -1,5 +1,6 @@
 const chatModel = require("../models/chat.model");
 const messageModel = require("../models/message.model");
+const {deleteMemory} = require("../services/Vector.service");
 
 const createChat = async (req, res) => {
     try {
@@ -62,7 +63,14 @@ const deleteChat = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user._id;
-        const chat = await chatModel.findOneAndDelete({ _id: id, userId });
+        const [chat, messageIds] = await Promise.all([
+            chatModel.findOneAndDelete({ _id: id, userId }),
+            messageModel.find({ chatId: id }).distinct("_id"),
+        ]);
+        await Promise.all([
+            messageModel.deleteMany({ chatId: id }),
+            deleteMemory(messageIds),
+        ]);
         if (!chat) {
             return res.status(404).json({ error: "Chat not found" });
         }
