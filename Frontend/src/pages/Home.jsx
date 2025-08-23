@@ -60,7 +60,11 @@ const Home = () => {
       setMessages((prev) => [...prev, { role: "model", content: response }]);
       setPending(false);
     };
+  const onDisconnect = () => setPending(false);
+  const onError = () => setPending(false);
     socket.on("ai-response", onAiResponse);
+  socket.on("disconnect", onDisconnect);
+  socket.on("connect_error", onError);
     return () => socket.off("ai-response", onAiResponse);
   }, [socket, chatId]);
 
@@ -80,6 +84,7 @@ const Home = () => {
       setChatId(chat?._id);
       setTitle(chat?.title || "New Chat");
       setMessages([]);
+  setPending(false);
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to create chat");
     }
@@ -89,6 +94,7 @@ const Home = () => {
     setChatId(c._id);
     setTitle(c.title);
     setMessages([]);
+  setPending(false);
     try {
       // Fetch full message history for this chat
       const { data } = await api.get(`/chat/${c._id}/messages`);
@@ -102,6 +108,20 @@ const Home = () => {
     }
   };
 
+  const handleRename = async (id, newTitle) => {
+    try {
+      const { data } = await api.put(`/chat/${id}`, { title: newTitle });
+      const updated = data?.chat;
+      // update list
+      setChats((prev) => prev.map((c) => (c._id === id ? { ...c, title: updated?.title || newTitle } : c)));
+      // if active chat, update header title too
+      if (chatId === id) setTitle(updated?.title || newTitle);
+    } catch (err) {
+      toast.error(err?.response?.data?.error || err?.response?.data?.message || "Failed to rename chat");
+      throw err;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex items-center justify-center p-0 transition-colors">
       <div className="w-full max-w-6xl h-screen md:h-[90vh] md:my-4 rounded-none md:rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/40 backdrop-blur border border-slate-200 dark:border-white/10 shadow-xl dark:shadow-black/30 flex">
@@ -110,10 +130,11 @@ const Home = () => {
           chats={chats}
           activeId={chatId}
           onSelect={handleSelectChat}
+          onRename={handleRename}
         />
         <div className="flex-1 flex flex-col">
           <ChatHeader title={title} />
-          <MessageList messages={messages} />
+          <MessageList messages={messages} pending={pending} />
           <MessageInput
             onSend={handleSend}
             disabled={!connected || pending || !chatId}

@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import MessageBubble from "./MessageBubble";
+import TypingBubble from "./TypingBubble";
 
-const MessageList = ({ messages }) => {
+const MessageList = ({ messages, pending }) => {
   const bottomRef = useRef(null);
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, pending]);
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-950/40">
@@ -16,6 +17,7 @@ const MessageList = ({ messages }) => {
       ) : (
         messages.map((m, i) => <MessageBubble key={i} role={m.role} content={m.content} />)
       )}
+      {pending && <TypingBubble />}
       <div ref={bottomRef} />
     </div>
   );
