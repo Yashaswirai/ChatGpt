@@ -10,6 +10,7 @@ const Register = () => {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: { username: "", email: "", password: "", confirm: "" },
@@ -21,10 +22,12 @@ const Register = () => {
       const email = data?.user?.email ?? data?.newUser?.email ?? values.email;
       toast.success(`Account created for ${email}`);
       navigate("/");
+      reset();
     } catch (err) {
       const msg =
         err?.response?.data?.message ?? err?.message ?? "Registration failed";
       toast.error(msg);
+      reset();
     }
   };
 
@@ -36,7 +39,7 @@ const Register = () => {
         <div className="flex items-center gap-2 mb-8 select-none">
           <div className="h-3 w-3 rounded-sm bg-sky-500 shadow-[0_0_20px] shadow-sky-500/40" />
           <span className="font-semibold tracking-wide text-slate-700 dark:text-slate-300">
-            ChatAI
+            Aurora AI
           </span>
         </div>
 

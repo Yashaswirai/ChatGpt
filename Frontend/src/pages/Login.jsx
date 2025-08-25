@@ -29,7 +29,7 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="flex items-center gap-2 mb-8 select-none">
           <div className="h-3 w-3 rounded-sm bg-sky-500 shadow-[0_0_20px] shadow-sky-500/40" />
-          <span className="font-semibold tracking-wide text-slate-700 dark:text-slate-300">ChatAI</span>
+          <span className="font-semibold tracking-wide text-slate-700 dark:text-slate-300">Aurora AI</span>
         </div>
 
         <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-2xl p-8 shadow-xl shadow-slate-900/5 dark:shadow-black/40">
