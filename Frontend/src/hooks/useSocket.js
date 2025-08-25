@@ -8,7 +8,7 @@ export default function useSocket() {
 
   // Create once
   const socket = useMemo(() => {
-    const s = io("http://localhost:3000", {
+    const s = io("https://chatgpt-sc2z.onrender.com", {
       withCredentials: true,
       autoConnect: false,
     });
