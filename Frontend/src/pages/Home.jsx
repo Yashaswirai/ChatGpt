@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ChatHeader from "../components/chat/ChatHeader";
 import MessageList from "../components/chat/MessageList";
+import Welcome from "../components/chat/Welcome";
 import MessageInput from "../components/chat/MessageInput";
 import Sidebar from "../components/chat/Sidebar";
 import useSocket from "../hooks/useSocket";
@@ -174,11 +175,17 @@ const Home = () => {
             onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
             sidebarOpen={mobileSidebarOpen}
           />
-          <MessageList messages={messages} pending={pending} />
-          <MessageInput
-            onSend={handleSend}
-            disabled={!connected || pending || !chatId}
-          />
+          {chats.length === 0 || !chatId ? (
+            <Welcome onNewChat={handleNewChat} />
+          ) : (
+            <>
+              <MessageList messages={messages} pending={pending} />
+              <MessageInput
+                onSend={handleSend}
+                disabled={!connected || pending || !chatId}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

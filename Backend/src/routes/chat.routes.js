@@ -8,6 +8,7 @@ const {
   updateChat,
   deleteChat,
   getChatMessages,
+  getPrompts
 } = require("../controllers/chat.controller");
 
 router
@@ -15,6 +16,7 @@ router
   .get(authMiddleware, getChats)
   .post(authMiddleware, createChat);
 
+router.get("/prompts", authMiddleware, getPrompts);
 router
   .route("/:id")
   .get(authMiddleware, getChatById)
