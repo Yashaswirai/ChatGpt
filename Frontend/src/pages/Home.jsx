@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import ChatHeader from "../components/chat/ChatHeader";
-import MessageList from "../components/chat/MessageList";
-import Welcome from "../components/chat/Welcome";
-import MessageInput from "../components/chat/MessageInput";
-import Sidebar from "../components/chat/Sidebar";
+import React, { Suspense, lazy, useEffect, useState } from "react";
+const ChatHeader = lazy(() => import("../components/chat/ChatHeader"));
+const MessageList = lazy(() => import("../components/chat/MessageList"));
+const Welcome = lazy(() => import("../components/chat/Welcome"));
+const MessageInput = lazy(() => import("../components/chat/MessageInput"));
+const Sidebar = lazy(() => import("../components/chat/Sidebar"));
 import useSocket from "../hooks/useSocket";
 import api from "../API";
 import { toast } from "react-toastify";
@@ -159,33 +159,39 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex items-center justify-center p-0 transition-colors">
       <div className="w-full max-w-6xl h-screen md:h-[90vh] md:my-4 rounded-none md:rounded-2xl overflow-hidden bg-white/80 dark:bg-slate-900/40 backdrop-blur border border-slate-200 dark:border-white/10 shadow-xl dark:shadow-black/30 flex">
-        <Sidebar
-          onNewChat={handleNewChat}
-          chats={chats}
-          activeId={chatId}
-          onSelect={handleSelectChat}
-          onRename={handleRename}
-          onDelete={handleDelete}
-          mobileOpen={mobileSidebarOpen}
-          onCloseMobile={() => setMobileSidebarOpen(false)}
-        />
-  <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <ChatHeader
-            title={title}
-            onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
-            sidebarOpen={mobileSidebarOpen}
+        <Suspense fallback={<div className="w-64 h-full flex items-center justify-center"><div className="h-6 w-6 rounded-full border-2 border-slate-300 border-t-sky-500 animate-spin" /></div>}>
+          <Sidebar
+            onNewChat={handleNewChat}
+            chats={chats}
+            activeId={chatId}
+            onSelect={handleSelectChat}
+            onRename={handleRename}
+            onDelete={handleDelete}
+            mobileOpen={mobileSidebarOpen}
+            onCloseMobile={() => setMobileSidebarOpen(false)}
           />
-          {chats.length === 0 || !chatId ? (
-            <Welcome onNewChat={handleNewChat} />
-          ) : (
-            <>
-              <MessageList messages={messages} pending={pending} />
-              <MessageInput
-                onSend={handleSend}
-                disabled={!connected || pending || !chatId}
-              />
-            </>
-          )}
+        </Suspense>
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <Suspense fallback={<div className="h-14 flex items-center justify-center border-b border-slate-200 dark:border-white/10"><div className="h-5 w-5 rounded-full border-2 border-slate-300 border-t-sky-500 animate-spin" /></div>}>
+            <ChatHeader
+              title={title}
+              onToggleSidebar={() => setMobileSidebarOpen((v) => !v)}
+              sidebarOpen={mobileSidebarOpen}
+            />
+          </Suspense>
+          <Suspense fallback={<div className="flex-1 min-h-0 flex items-center justify-center"><div className="h-6 w-6 rounded-full border-2 border-slate-300 border-t-sky-500 animate-spin" /></div>}>
+            {chats.length === 0 || !chatId ? (
+              <Welcome onNewChat={handleNewChat} />
+            ) : (
+              <>
+                <MessageList messages={messages} pending={pending} />
+                <MessageInput
+                  onSend={handleSend}
+                  disabled={!connected || pending || !chatId}
+                />
+              </>
+            )}
+          </Suspense>
         </div>
       </div>
     </div>
