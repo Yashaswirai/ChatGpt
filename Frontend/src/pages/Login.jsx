@@ -47,7 +47,7 @@ const Login = () => {
                 autoComplete="identifier"
                 className="w-full rounded-xl bg-white border border-slate-300 px-4 py-3 outline-none text-slate-900 placeholder:text-slate-500 focus:ring-2 focus:ring-sky-500 focus:border-transparent transition dark:bg-slate-800/70 dark:border-white/10 dark:text-slate-100 dark:placeholder:text-slate-400"
                 placeholder="Username or Email"
-                {...register('identifier', { required: 'identifier is required' })}
+                {...register('identifier', { required: 'Username or Email is required' })}
               />
               {errors.identifier && (
                 <p className="mt-1 text-sm text-rose-400">{errors.identifier.message}</p>
